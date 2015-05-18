@@ -97,13 +97,13 @@ physicsTick :: Sim -> Sim
 physicsTick sim = boat %~ movement $ sim
   where
     movement = rotation . leeway . forward . friction . speedup
-    rotation = over heading (+1.5*totalTorque)
-    leeway   = over position (+ 0.001*(perp $ angle oldHeading)
+    rotation = over heading (+10.0*totalTorque)
+    leeway   = over position (+ 0.01*(perp $ angle oldHeading)
                                  ^*(totalSailForce ^. _y)      )
     forward  = over position (+ (angle oldHeading)
                                 ^*oldSpeed        )
-    friction = over speed $ \v -> if v > 0 then 0.9*v
-                                           else 0.8*v
+    friction = over speed $ \v -> if v > 0 then 0.95*v
+                                           else 0.90*v
     speedup  = over speed (+ 0.005*(totalSailForce ^. _x))
     sailForces = map sailForce $ theboat ^. sails
     totalSailForce  = sum (map fst    sailForces)
@@ -112,7 +112,7 @@ physicsTick sim = boat %~ movement $ sim
     theboat = sim ^. boat
     oldHeading = theboat ^. heading
     oldSpeed   = theboat ^. speed
-    sailForce s = ( relativeNormal ^* 0.05
+    sailForce s = ( relativeNormal ^* 0.03
                       ^* absoluteNormal `dot` (sim^.wind)
                   , s ^. mast                     )
       where relativeNormal = angle (s^.orientation)
@@ -126,6 +126,6 @@ sailInput :: Input -> Sail -> Sail
 sailInput input sail = 
   case ( (sail^.keyLeft)  `member` (input^.keysDown)
        , (sail^.keyRight) `member` (input^.keysDown)) of
-    (True , False) -> orientation %~ (+  0.1 ) $ sail
-    (False, True ) -> orientation %~ (+(-0.1)) $ sail
+    (True , False) -> orientation %~ (+  0.05 ) $ sail
+    (False, True ) -> orientation %~ (+(-0.05)) $ sail
     _              -> sail
